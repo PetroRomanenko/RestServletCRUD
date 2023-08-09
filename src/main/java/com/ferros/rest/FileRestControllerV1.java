@@ -2,7 +2,6 @@ package com.ferros.rest;
 
 
 import com.ferros.model.File;
-import com.ferros.model.User;
 import com.ferros.service.FileService;
 import com.google.gson.Gson;
 import jakarta.servlet.ServletException;
@@ -11,8 +10,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import java.io.BufferedReader;
-import java.io.IOException;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 
 @WebServlet("/api/v1/files")
@@ -37,9 +35,34 @@ public class FileRestControllerV1 extends HttpServlet {
     private String gsonToJson(File file){
         return gson.toJson(file,File.class);
     }
+
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        response.getWriter().println();
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        //Receive File id from user from request
+        Integer fileId = Integer.parseInt(req.getParameter("fileId"));
+
+        //Get file from bd using ID
+        File file = fileService.getFile(fileId);
+
+        if(file!=null){
+            //Set Headers for response for downloading file
+            resp.setContentType("application/octet-stream");
+            resp.setHeader("Content-Disposition","attachment; filename=\""+file.getName()+"\"");
+
+            //Create input stream
+            try(InputStream inputStream = new FileInputStream(file.getFilePath());
+                OutputStream outputStream = resp.getOutputStream()) {
+                //Copy file to output stream
+                byte[] buffer = new byte[1024];
+                int bytesRead;
+                while ((bytesRead =inputStream.read(buffer))!=-1){
+                    outputStream.write(buffer,0,bytesRead);
+                }
+            }
+        } else {
+            resp.sendError(HttpServletResponse.SC_NOT_FOUND, "File not found");
+        }
+
     }
 
     @Override

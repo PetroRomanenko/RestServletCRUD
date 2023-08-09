@@ -1,1 +1,3 @@
 3  text
+Hello From third file
+Новая строка

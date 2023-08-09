@@ -16,11 +16,12 @@ public class FileService {
     private final FileRepository fileRepository = new HibernateFileRepositoryImpl();
     private final UserService userService = new UserService();
     private final EventService eventService = new EventService();
+    //TODO Спросить у Жени какой тут путь прописывать для загрузки с интернета
     private final String UPLOAD_DIRECTORY = "src/main/resources/files";
 
-    public com.ferros.model.File showFile(HttpServletRequest request){
-        request.getIntHeader("user_id");
-        return fileRepository.getById(1);
+    public com.ferros.model.File getFile(Integer fileId){
+//        Integer fileId = request.getIntHeader("file_id");
+        return fileRepository.getById(fileId);
     }
     public void deleteFile(HttpServletRequest request){
         Integer fileId = request.getIntHeader("file_id");
