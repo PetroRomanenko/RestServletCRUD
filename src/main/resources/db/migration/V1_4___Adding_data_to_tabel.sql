@@ -1,0 +1,1 @@
+INSERT INTO public.files (id, name, file_path) VALUES (DEFAULT, 'ThirdFile', 'src/main/resources/Files/third.txt')
