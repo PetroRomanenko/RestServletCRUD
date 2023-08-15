@@ -1,82 +1,121 @@
 package com.ferros.rest;
 
 
+import com.ferros.model.Event;
 import com.ferros.model.File;
+import com.ferros.model.User;
 import com.ferros.service.FileService;
 import com.google.gson.Gson;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.MultipartConfig;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.*;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
-@WebServlet("/api/v1/files")
+@WebServlet("/app/v1/files/*")
+@MultipartConfig(
+        fileSizeThreshold = 1024 * 1024 * 1,
+        maxFileSize = 1024 * 1024 * 10,
+        maxRequestSize = 1024 * 1024 * 5 * 5
+)
 public class FileRestControllerV1 extends HttpServlet {
     private FileService fileService = new FileService();
     private Gson gson = new Gson();
-    //TODO: connect GSON
-
-    private File fileFromRequest(HttpServletRequest request) throws IOException {
-        StringBuilder stringBuilder = new StringBuilder();
-        BufferedReader reader = request.getReader();
-        String line;
-        while ((line = reader.readLine()) != null) {
-            stringBuilder.append(line);
-        }
-        String json = stringBuilder.toString();
 
 
-        return gson.fromJson(json, File.class);
-    }
 
-    private String gsonToJson(File file){
-        return gson.toJson(file,File.class);
-    }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        //Receive File id from user from request
-        Integer fileId = Integer.parseInt(req.getParameter("fileId"));
+        String pathInfo = req.getPathInfo();
+        resp.setCharacterEncoding(StandardCharsets.UTF_8.name());
+//        resp.setContentType("application/json");
 
-        //Get file from bd using ID
-        File file = fileService.getFile(fileId);
+        if (pathInfo == null || pathInfo.equals("/")){
+            List<File> fileList = fileService.getAllFiles();
+            String eventsJson = gson.toJson(fileList);
+            resp.getWriter().write(eventsJson);
+        }else {
+            //receive event id
+            String FileIdString = pathInfo.substring(1);
+            Integer fileId = Integer.parseInt(FileIdString);
 
-        if(file!=null){
-            //Set Headers for response for downloading file
-            resp.setContentType("application/octet-stream");
-            resp.setHeader("Content-Disposition","attachment; filename=\""+file.getName()+"\"");
 
-            //Create input stream
-            try(InputStream inputStream = new FileInputStream(file.getFilePath());
-                OutputStream outputStream = resp.getOutputStream()) {
-                //Copy file to output stream
-                byte[] buffer = new byte[1024];
-                int bytesRead;
-                while ((bytesRead =inputStream.read(buffer))!=-1){
-                    outputStream.write(buffer,0,bytesRead);
+            //Get file from bd using ID
+            File file = fileService.getFile(fileId);
+            fileService.createDownloadEvent(req, file);
+
+            if (file != null) {
+                //Set Headers for response for downloading file
+                resp.setContentType("application/octet-stream");
+                resp.setHeader("Content-Disposition", "attachment; filename=\"" + file.getName() + "\"");
+
+                //Create input stream
+                try (InputStream inputStream = new FileInputStream(file.getFilePath());
+                     OutputStream outputStream = resp.getOutputStream()) {
+                    //Copy file to output stream
+                    byte[] buffer = new byte[1024];
+                    int bytesRead;
+                    while ((bytesRead = inputStream.read(buffer)) != -1) {
+                        outputStream.write(buffer, 0, bytesRead);
+                    }
                 }
+            } else {
+                resp.sendError(HttpServletResponse.SC_NOT_FOUND, "File not found");
             }
-        } else {
-            resp.sendError(HttpServletResponse.SC_NOT_FOUND, "File not found");
         }
 
     }
 
+
+
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        //Upload file
         resp.setCharacterEncoding(StandardCharsets.UTF_8.name());
-        resp.setContentType("application/json");
-        File result = fileService.uploadFile(req);
 
-        BufferedReader reader = req.getReader();
-        File createdNewFile = new Gson().fromJson(reader, File.class);
-        System.out.println(createdNewFile);
-        fileService.saveFileToDB(createdNewFile);
-//        String json = gsonToJson(result);
-//        resp.getWriter().write(json);
+
+        String pathInfo = req.getPathInfo();
+        //receive event id
+        String FileIdString = pathInfo.substring(1);
+        Integer userId = Integer.parseInt(FileIdString);
+
+        File result = fileService.uploadFile(req );
+
+
+//        BufferedReader reader = req.getReader();
+//        File createdNewFile = new Gson().fromJson(reader, File.class);
+//        System.out.println(createdNewFile);
+//        var resultFile = fileService.saveFileToDB(createdNewFile);
+
+        resp.getWriter().print("The file uploaded sucessfully.");
+        String json = gson.toJson(result);
+        resp.getWriter().write(json);
+    }
+
+
+    @Override
+    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        //Update name of file
+        String pathInfo = req.getPathInfo();
+        String fileIdString = pathInfo.substring(1);
+        Integer fileId = Integer.parseInt(fileIdString);
+
+        String requestBody = req.getReader().lines().reduce("", (accumulator, actual) -> accumulator + actual);
+
+        File updatedFile= gson.fromJson(requestBody, File.class);
+        updatedFile.setId(fileId);
+
+        File savedFile = fileService.upateFile(updatedFile);
+        if (savedFile != null) {
+            String savedJsonString = gson.toJson(savedFile);
+            resp.getWriter().write(savedJsonString);
+        } else {
+            resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+        }
     }
 
     @Override

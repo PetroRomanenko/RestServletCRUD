@@ -7,7 +7,6 @@ import com.ferros.repository.UserRepository;
 import com.ferros.repository.hibernate.HibernateEventRepositoryImpl;
 import com.ferros.repository.hibernate.HibernateFileRepositoryImpl;
 import com.ferros.repository.hibernate.HibernateUserRepositoryImpl;
-import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,17 +30,14 @@ public class UserService {
         return userRepository.getAll();
     }
 
-    public User createUser(HttpServletRequest req, User user) {
+    public User createUser( User user) {
         user.setEvents(new ArrayList<>());
 
         return saveUser(user);
     }
 
-    public void updateUser(Integer userId, String newUserName) {
-        User oldUser = getById(userId);
-        oldUser.setName(newUserName);
-
-        userRepository.update(oldUser);
+    public User updateUser(Integer userId, User upatedUser) {
+        return userRepository.update(upatedUser);
     }
 
     public void deleteUser(Integer userId){

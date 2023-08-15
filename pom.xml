@@ -1,17 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.ferros</groupId>
     <artifactId>RestServletCRUD</artifactId>
     <packaging>war</packaging>
     <version>1.0-SNAPSHOT</version>
     <name>RestServletCRUD Maven Webapp</name>
-    <url>http://maven.apache.org</url>
+
     <properties>
-        <maven.compiler.source>19</maven.compiler.source>
-        <maven.compiler.target>19</maven.compiler.target>
-        <servlet.version>6.0.0</servlet.version>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+        <servlet.version>3.0.1</servlet.version>
         <hibernate.version>6.2.6.Final</hibernate.version>
         <postgresql.version>42.6.0</postgresql.version>
         <lombock.version>1.18.28</lombock.version>
@@ -21,16 +22,24 @@
         <mockito.version>4.11.0</mockito.version>
         <gson.version>2.10.1</gson.version>
         <tomcat.plugin.version>2.2</tomcat.plugin.version>
+        <tomcat.version>7.0.86</tomcat.version>
     </properties>
 
 
     <dependencies>
         <dependency>
-            <groupId>jakarta.servlet</groupId>
-            <artifactId>jakarta.servlet-api</artifactId>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
             <version>${servlet.version}</version>
             <scope>provided</scope>
         </dependency>
+        <!--<dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+            <version>3.0</version>
+            <scope>provided</scope>
+        </dependency>-->
+
         <dependency>
             <groupId>org.hibernate.orm</groupId>
             <artifactId>hibernate-core</artifactId>
@@ -40,6 +49,7 @@
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>${postgresql.version}</version>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -79,10 +89,12 @@
             <scope>test</scope>
         </dependency>
 
+
+
     </dependencies>
 
     <build>
-        <finalName>RestServletCRUD</finalName>
+        <finalName>ROOT</finalName>
         <plugins>
             <plugin>
                 <groupId>org.flywaydb</groupId>
@@ -106,16 +118,33 @@
 
                 </dependencies>
             </plugin>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.5.1</version>
+                <configuration>
+                    <source>11</source>
+                    <target>11</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>3.3.1</version>
+            </plugin>
+
+
             <!-- Tomcat plugin -->
-<!--            <plugin>-->
-<!--                <groupId>org.apache.tomcat.maven</groupId>-->
-<!--                <artifactId>tomcat7-maven-plugin</artifactId>-->
-<!--                <version>${tomcat.plugin.version}</version>-->
-<!--                <configuration>-->
-<!--                    <path>/</path>-->
-<!--                    <port>8082</port>-->
-<!--                </configuration>-->
-<!--            </plugin>-->
+            <plugin>
+                <groupId>org.apache.tomcat.maven</groupId>
+                <artifactId>tomcat7-maven-plugin</artifactId>
+                <version>${tomcat.plugin.version}</version>
+
+                <configuration>
+
+                    <port>8082</port>
+                    <path>/</path>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 </project>
