@@ -1,9 +1,7 @@
 package com.ferros.rest;
 
 
-import com.ferros.model.Event;
 import com.ferros.model.File;
-import com.ferros.model.User;
 import com.ferros.service.FileService;
 import com.google.gson.Gson;
 import javax.servlet.ServletException;
@@ -17,7 +15,7 @@ import java.util.List;
 
 @WebServlet("/app/v1/files/*")
 @MultipartConfig(
-        fileSizeThreshold = 1024 * 1024 * 1,
+        fileSizeThreshold = 1024 * 1024,
         maxFileSize = 1024 * 1024 * 10,
         maxRequestSize = 1024 * 1024 * 5 * 5
 )
@@ -46,7 +44,6 @@ public class FileRestControllerV1 extends HttpServlet {
 
             //Get file from bd using ID
             File file = fileService.getFile(fileId);
-            fileService.createDownloadEvent(req, file);
 
             if (file != null) {
                 //Set Headers for response for downloading file
@@ -83,17 +80,15 @@ public class FileRestControllerV1 extends HttpServlet {
         String FileIdString = pathInfo.substring(1);
         Integer userId = Integer.parseInt(FileIdString);
 
-        File result = fileService.uploadFile(req );
+        //Get Part of file and uploading file
+        Part filePart = req.getPart("file");
+        String fileName = fileService.fileUploadService(filePart,userId).getName();
 
 
-//        BufferedReader reader = req.getReader();
-//        File createdNewFile = new Gson().fromJson(reader, File.class);
-//        System.out.println(createdNewFile);
-//        var resultFile = fileService.saveFileToDB(createdNewFile);
 
-        resp.getWriter().print("The file uploaded sucessfully.");
-        String json = gson.toJson(result);
-        resp.getWriter().write(json);
+
+        resp.getWriter().println("File " + fileName + " has been uploaded successfully.");
+
     }
 
 

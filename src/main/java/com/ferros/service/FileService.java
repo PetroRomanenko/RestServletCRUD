@@ -5,12 +5,13 @@ import com.ferros.model.Event;
 import com.ferros.model.User;
 import com.ferros.repository.FileRepository;
 import com.ferros.repository.hibernate.HibernateFileRepositoryImpl;
+
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 import javax.servlet.http.Part;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.util.List;
 
 public class FileService {
@@ -22,66 +23,71 @@ public class FileService {
 
     private final String UPLOAD_DIRECTORY = "src/main/resources/files";
     private final String DEFAULT_FILENAME = "DefaultFile";
-    public File getFile(Integer fileId){
+
+    public File getFile(Integer fileId) {
 //        Integer fileId = request.getIntHeader("file_id");
         return fileRepository.getById(fileId);
     }
 
-    public File upateFile(File file){
+    public File upateFile(File file) {
         return fileRepository.update(file);
     }
-    public void deleteFile(HttpServletRequest request){
+
+    public void deleteFile(HttpServletRequest request) {
         Integer fileId = request.getIntHeader("file_id");
 //        userService.deleteById(fileId);
 
     }
-    public File saveFileToDB(File file){
-        if (file!=null) {
+
+    public File saveFileToDB(File file) {
+        if (file != null) {
             return fileRepository.save(file);
+        } else return null;
+    }
+
+
+
+    public File fileUploadService(Part filePart, Integer userId) throws ServletException, IOException {
+
+        String fileName = getSubmittedFileName(filePart);
+        String filePath = UPLOAD_DIRECTORY + java.io.File.separator + fileName;
+
+        java.io.File uploadDir = new java.io.File(UPLOAD_DIRECTORY);
+        if (!uploadDir.exists()){
+            uploadDir.mkdirs();
         }
-        else return null;
-    }
-    public Event createDownloadEvent(HttpServletRequest req, File file) {
-        //Receive session and get current user
-        var session = req.getSession();
-        User currentUser = (User)session.getAttribute(USER);
-        //creating new event
-        Event newDownloadEvent = new Event();
-        newDownloadEvent.setFile(file);
-        newDownloadEvent.setUser(currentUser);
-        //save event to db
-        return eventService.save(newDownloadEvent);
-    }
-    public File uploadFile(HttpServletRequest request) throws ServletException, IOException {
-
-        //TODO: upload physical file
-//        String fileName = physicalUploadFile(request);
-
-        String uploadPath = request.getServletContext().getRealPath("") + java.io.File.separator + UPLOAD_DIRECTORY;
-        java.io.File uploadDir = new java.io.File(uploadPath);
-        if (!uploadDir.exists()) uploadDir.mkdir();
-        for (Part part : request.getParts()) {
-            String fileName = getFileName(part);
-            part.write(uploadPath + java.io.File.separator + fileName);
+        try (var fileContent = filePart.getInputStream()) {
+            Files.copy(fileContent, new java.io.File(filePath).toPath());
         }
 
+        //get user from DB
+        User user = userService.getById(userId);
 
-//        File fileToSave = new File();
-//        fileToSave.setName(fileName);
-//        fileToSave.setFilePath(UPLOAD_DIRECTORY+fileName);
+        //Create new File
+        File fileToSave = new File();
+        fileToSave.setName(fileName);
+        fileToSave.setFilePath(filePath);
 
-//        File createdFile =saveFileToDB(fileToSave);
-//
-//        Event UploadEvent = createDownloadEvent(request, fileToSave);
-//
+        //Save file to DB
+        File createdFile =saveFileToDB(fileToSave);
+        //Save Event to DB
+        eventService.createUploadEvent(user, fileToSave);
+
+        return createdFile;
+    }
+
+    private String getSubmittedFileName(Part part) {
+        if (part != null) {
+            String header = part.getHeader("content-disposition");
+
+            String[] parts = header.split(";");
+            for (String cd : parts) {
+                if (cd.trim().startsWith("filename")) {
+                    return cd.substring(cd.indexOf('=') + 1).trim().replace("\"", "");
+                }
+            }
+        }
         return null;
-    }
-    private String getFileName(Part part) {
-        for (String content : part.getHeader("content-disposition").split(";")) {
-            if (content.trim().startsWith("filename"))
-                return content.substring(content.indexOf("=") + 2, content.length() - 1);
-        }
-        return DEFAULT_FILENAME;
     }
 
     private String physicalUploadFile(HttpServletRequest request) throws IOException, ServletException {
@@ -121,6 +127,6 @@ public class FileService {
 
 
     public List<File> getAllFiles() {
-       return fileRepository.getAll();
+        return fileRepository.getAll();
     }
 }

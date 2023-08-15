@@ -1,6 +1,8 @@
 package com.ferros.service;
 
 import com.ferros.model.Event;
+import com.ferros.model.File;
+import com.ferros.model.User;
 import com.ferros.repository.EventRepository;
 import com.ferros.repository.FileRepository;
 import com.ferros.repository.UserRepository;
@@ -27,5 +29,14 @@ public class EventService {
 
     public Event getById(Integer eventId) {
         return eventRepository.getById(eventId);
+    }
+
+    public Event createUploadEvent(User user, File fileToSave) {
+        Event newUploadEvent = new Event();
+        newUploadEvent.setUser(user);
+        newUploadEvent.setFile(fileToSave);
+
+        eventRepository.save(newUploadEvent);
+        return newUploadEvent;
     }
 }
