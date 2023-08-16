@@ -43,7 +43,7 @@ public class HibernateFileRepositoryImpl implements FileRepository {
     public File update(File file) {
         try (var session = HibernateUtil.openSession()) {
             session.beginTransaction();
-            session.merge(file);
+            session.update(file);
             session.getTransaction().commit();
             return file;
         }

@@ -7,14 +7,22 @@ import com.ferros.repository.UserRepository;
 import com.ferros.repository.hibernate.HibernateEventRepositoryImpl;
 import com.ferros.repository.hibernate.HibernateFileRepositoryImpl;
 import com.ferros.repository.hibernate.HibernateUserRepositoryImpl;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Setter
 public class UserService {
-    private final FileRepository fileRepository = new HibernateFileRepositoryImpl();
-    private final UserRepository userRepository = new HibernateUserRepositoryImpl();
-    private final EventRepository eventRepository = new HibernateEventRepositoryImpl();
+    private  FileRepository fileRepository = new HibernateFileRepositoryImpl();
+    private  UserRepository userRepository = new HibernateUserRepositoryImpl();
+    private  EventRepository eventRepository = new HibernateEventRepositoryImpl();
     public User getById(Integer userId) {
         return userRepository.getById(userId);
     }

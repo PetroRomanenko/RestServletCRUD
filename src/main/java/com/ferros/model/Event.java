@@ -23,9 +23,10 @@ public class Event {
     private User user;
 
     @OneToOne
-    @Expose
-    @ToString.Exclude
+
+//    @ToString.Exclude
     @JoinColumn(name = "file_id")
+    @Expose
     private File file;
 
 }

@@ -1,9 +1,7 @@
 package com.ferros.rest;
 
 
-import com.ferros.model.Event;
 import com.ferros.model.File;
-import com.ferros.model.User;
 import com.ferros.service.FileService;
 import com.google.gson.Gson;
 import javax.servlet.ServletException;
@@ -17,7 +15,7 @@ import java.util.List;
 
 @WebServlet("/app/v1/files/*")
 @MultipartConfig(
-        fileSizeThreshold = 1024 * 1024 * 1,
+        fileSizeThreshold = 1024 * 1024,
         maxFileSize = 1024 * 1024 * 10,
         maxRequestSize = 1024 * 1024 * 5 * 5
 )
@@ -46,7 +44,6 @@ public class FileRestControllerV1 extends HttpServlet {
 
             //Get file from bd using ID
             File file = fileService.getFile(fileId);
-            fileService.createDownloadEvent(req, file);
 
             if (file != null) {
                 //Set Headers for response for downloading file
@@ -83,17 +80,12 @@ public class FileRestControllerV1 extends HttpServlet {
         String FileIdString = pathInfo.substring(1);
         Integer userId = Integer.parseInt(FileIdString);
 
-        File result = fileService.uploadFile(req );
+        //Get Part of file and uploading file
+        Part filePart = req.getPart("file");
+        String fileName = fileService.fileUploadService(filePart,userId).getName();
 
+        resp.getWriter().println("File " + fileName + " has been uploaded successfully.");
 
-//        BufferedReader reader = req.getReader();
-//        File createdNewFile = new Gson().fromJson(reader, File.class);
-//        System.out.println(createdNewFile);
-//        var resultFile = fileService.saveFileToDB(createdNewFile);
-
-        resp.getWriter().print("The file uploaded sucessfully.");
-        String json = gson.toJson(result);
-        resp.getWriter().write(json);
     }
 
 
@@ -107,9 +99,9 @@ public class FileRestControllerV1 extends HttpServlet {
         String requestBody = req.getReader().lines().reduce("", (accumulator, actual) -> accumulator + actual);
 
         File updatedFile= gson.fromJson(requestBody, File.class);
-        updatedFile.setId(fileId);
 
-        File savedFile = fileService.upateFile(updatedFile);
+
+        File savedFile = fileService.upateFile(fileId,updatedFile.getName());
         if (savedFile != null) {
             String savedJsonString = gson.toJson(savedFile);
             resp.getWriter().write(savedJsonString);
@@ -120,6 +112,12 @@ public class FileRestControllerV1 extends HttpServlet {
 
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        fileService.deleteFile(req);
+        //Get id of user we want to delete
+        String pathInfo = req.getPathInfo();
+        String fileIdString = pathInfo.substring(1);
+        Integer deletedFileId = Integer.parseInt(fileIdString);
+
+        fileService.deleteFile(deletedFileId);
+        resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
     }
 }
