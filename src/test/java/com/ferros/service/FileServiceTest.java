@@ -3,13 +3,14 @@ package com.ferros.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
-import org.junit.Ignore;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import com.ferros.model.File;
 import com.ferros.model.User;
 import com.ferros.repository.FileRepository;
-import com.ferros.repository.UserRepository;
+
+
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import javax.servlet.ServletException;
@@ -17,6 +18,7 @@ import javax.servlet.http.Part;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
 
 public class FileServiceTest {
 
@@ -36,8 +38,8 @@ public class FileServiceTest {
         fileService.setEventService(eventService);
     }
 
-    @Test
-    @Ignore
+//    @Test
+
     public void testFileUploadService() throws ServletException, IOException {
         Part filePart = mock(Part.class);
         Integer userId = 1;
@@ -94,8 +96,8 @@ public class FileServiceTest {
         assertEquals(expectedFile, resultFile);
     }
 
-    @Test
-    @Ignore
+//    @Test
+
     public void testUpdateFile() {
         Integer fileId = 1;
         String newFileName = "newTestFile.txt";

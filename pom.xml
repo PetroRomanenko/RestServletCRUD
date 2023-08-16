@@ -19,7 +19,7 @@
         <lombock.version>1.18.28</lombock.version>
         <flyway.version>9.16.1</flyway.version>
         <flyway.maven.plagin>9.8.1</flyway.maven.plagin>
-        <junit.version>4.13.2</junit.version>
+        <junit.version>5.0.0-ALPHA</junit.version>
         <junit.jupiter.version>5.9.2</junit.jupiter.version>
         <mockito.version>4.11.0</mockito.version>
         <gson.version>2.10.1</gson.version>
@@ -65,10 +65,16 @@
         </dependency>
 
 
+<!--        <dependency>-->
+<!--            <groupId>org.junit</groupId>-->
+<!--            <artifactId>junit5-engine</artifactId>-->
+<!--            <version>${junit.version}</version>-->
+<!--            <scope>test</scope>-->
+<!--        </dependency>-->
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>${junit.version}</version>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>${junit.jupiter.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -101,6 +107,7 @@
                     <locations>
                         <location>filesystem:src/main/resources/db/migration</location>
                     </locations>
+
                 </configuration>
                 <dependencies>
                     <dependency>

@@ -21,10 +21,9 @@ import java.util.stream.Collectors;
 
 @WebServlet("/app/v1/events/*")
 public class EventRestControllerV1 extends HttpServlet {
-
-    private FileService fileService = new FileService();
+    private final UtilsServlet utilsServlet = new UtilsServlet();
     private final EventService eventService = new EventService();
-    private Gson gson = new GsonBuilder()
+    private final Gson gson = new GsonBuilder()
             .excludeFieldsWithoutExposeAnnotation()
             .create();
 
@@ -41,8 +40,7 @@ public class EventRestControllerV1 extends HttpServlet {
             resp.getWriter().write(eventsJson);
         }else {
             //receive event id
-            String eventIdString = pathInfo.substring(1);
-            Integer eventId = Integer.parseInt(eventIdString);
+            Integer eventId = utilsServlet.getInteger(req);
 
             Event event = eventService.getById(eventId);
             if (event!= null){
@@ -66,12 +64,8 @@ public class EventRestControllerV1 extends HttpServlet {
         //        "id": 3
         //        }
         //}
-        String pathInfo = req.getPathInfo();
-        String eventIdString = pathInfo.substring(1);
-        Integer eventId = Integer.parseInt(eventIdString);
-
-        String requestBody = req.getReader().lines().collect(Collectors.joining());
-        Event updatedEventFromJson = gson.fromJson(requestBody, Event.class);
+        Integer eventId = utilsServlet.getInteger(req);
+        Event updatedEventFromJson = utilsServlet.deserialize(req, Event.class);
 
         Integer userId = updatedEventFromJson.getUser().getId();
         Integer fileId = updatedEventFromJson.getFile().getId();
@@ -85,12 +79,12 @@ public class EventRestControllerV1 extends HttpServlet {
         }
     }
 
+
+
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         //Get id of event we want to delete
-        String pathInfo = req.getPathInfo();
-        String userIdString = pathInfo.substring(1);
-        Integer deletedEventId = Integer.parseInt(userIdString);
+        Integer deletedEventId = utilsServlet.getInteger(req);
 
         eventService.deleteUser(deletedEventId);
         resp.setStatus(HttpServletResponse.SC_NO_CONTENT);

@@ -21,6 +21,7 @@ import java.util.List;
 
 @WebServlet("/app/v1/users/*")
 public class UserRestControllerV1 extends HttpServlet {
+    private final UtilsServlet utilsServlet = new UtilsServlet();
     private final UserService userService = new UserService();
     private static final String USER = "user";
     private Gson gson = new GsonBuilder()
@@ -41,12 +42,7 @@ public class UserRestControllerV1 extends HttpServlet {
             String usersJson = gson.toJson(userList);
             resp.getWriter().write(usersJson);
         } else {
-            //Open session to store user data
-            var session = req.getSession();
-
-            //receive user id
-            String userIdString = pathInfo.substring(1); //remove first symbol "/"
-            Integer userId = Integer.parseInt(userIdString);
+            Integer userId = utilsServlet.getInteger(req);
 
             User user = userService.getById(userId);
             System.out.println(user);
@@ -64,8 +60,7 @@ public class UserRestControllerV1 extends HttpServlet {
         resp.setCharacterEncoding(StandardCharsets.UTF_8.name());
         resp.setContentType("application/json");
 
-        String requestBody = req.getReader().lines().reduce("", (accumulator, actual) -> accumulator + actual);
-        User newUser = gson.fromJson(requestBody, User.class);
+        User newUser = utilsServlet.deserialize(req, User.class);
         User createdNewUser = userService.createUser(newUser);
 
         String createdUserJson = new Gson().toJson(createdNewUser);
@@ -79,13 +74,10 @@ public class UserRestControllerV1 extends HttpServlet {
         //{
         //  "name": "New One1"
         //}
-        String pathInfo = req.getPathInfo();
-        String userIdString = pathInfo.substring(1);
-        Integer userId = Integer.parseInt(userIdString);
 
-        String requestBody = req.getReader().lines().reduce("", (accumulator, actual) -> accumulator + actual);
+        Integer userId = utilsServlet.getInteger(req);
 
-        User updatedUser = gson.fromJson(requestBody, User.class);
+        User updatedUser = utilsServlet.deserialize(req, User.class);
         updatedUser.setId(userId);
 
         User savedUser = userService.updateUser(userId, updatedUser);
@@ -100,10 +92,7 @@ public class UserRestControllerV1 extends HttpServlet {
 
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        //Get id of user we want to delete
-        String pathInfo = req.getPathInfo();
-        String userIdString = pathInfo.substring(1);
-        Integer deletedUserId = Integer.parseInt(userIdString);
+        Integer deletedUserId = utilsServlet.getInteger(req);
 
         userService.deleteUser(deletedUserId);
         resp.setStatus(HttpServletResponse.SC_NO_CONTENT);

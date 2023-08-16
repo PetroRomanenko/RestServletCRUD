@@ -12,6 +12,7 @@ import javax.servlet.http.*;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @WebServlet("/app/v1/files/*")
 @MultipartConfig(
@@ -21,39 +22,29 @@ import java.util.List;
 )
 public class FileRestControllerV1 extends HttpServlet {
     private FileService fileService = new FileService();
+    private final UtilsServlet utilsServlet = new UtilsServlet();
     private Gson gson = new Gson();
-
-
-
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String pathInfo = req.getPathInfo();
         resp.setCharacterEncoding(StandardCharsets.UTF_8.name());
-//        resp.setContentType("application/json");
 
         if (pathInfo == null || pathInfo.equals("/")){
             List<File> fileList = fileService.getAllFiles();
             String eventsJson = gson.toJson(fileList);
             resp.getWriter().write(eventsJson);
         }else {
-            //receive event id
-            String FileIdString = pathInfo.substring(1);
-            Integer fileId = Integer.parseInt(FileIdString);
-
-
-            //Get file from bd using ID
+            Integer fileId = utilsServlet.getInteger(req);
             File file = fileService.getFile(fileId);
 
             if (file != null) {
-                //Set Headers for response for downloading file
                 resp.setContentType("application/octet-stream");
                 resp.setHeader("Content-Disposition", "attachment; filename=\"" + file.getName() + "\"");
 
-                //Create input stream
                 try (InputStream inputStream = new FileInputStream(file.getFilePath());
                      OutputStream outputStream = resp.getOutputStream()) {
-                    //Copy file to output stream
+
                     byte[] buffer = new byte[1024];
                     int bytesRead;
                     while ((bytesRead = inputStream.read(buffer)) != -1) {
@@ -71,16 +62,10 @@ public class FileRestControllerV1 extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        //Upload file
         resp.setCharacterEncoding(StandardCharsets.UTF_8.name());
 
+        Integer userId = utilsServlet.getInteger(req);
 
-        String pathInfo = req.getPathInfo();
-        //receive event id
-        String FileIdString = pathInfo.substring(1);
-        Integer userId = Integer.parseInt(FileIdString);
-
-        //Get Part of file and uploading file
         Part filePart = req.getPart("file");
         String fileName = fileService.fileUploadService(filePart,userId).getName();
 
@@ -91,14 +76,10 @@ public class FileRestControllerV1 extends HttpServlet {
 
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        //Update name of file
-        String pathInfo = req.getPathInfo();
-        String fileIdString = pathInfo.substring(1);
-        Integer fileId = Integer.parseInt(fileIdString);
 
-        String requestBody = req.getReader().lines().reduce("", (accumulator, actual) -> accumulator + actual);
+        Integer fileId = utilsServlet.getInteger(req);
 
-        File updatedFile= gson.fromJson(requestBody, File.class);
+        File updatedFile = utilsServlet.deserialize(req, File.class);
 
 
         File savedFile = fileService.upateFile(fileId,updatedFile.getName());
@@ -110,12 +91,12 @@ public class FileRestControllerV1 extends HttpServlet {
         }
     }
 
+
+
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        //Get id of user we want to delete
-        String pathInfo = req.getPathInfo();
-        String fileIdString = pathInfo.substring(1);
-        Integer deletedFileId = Integer.parseInt(fileIdString);
+
+        Integer deletedFileId = utilsServlet.getInteger(req);
 
         fileService.deleteFile(deletedFileId);
         resp.setStatus(HttpServletResponse.SC_NO_CONTENT);

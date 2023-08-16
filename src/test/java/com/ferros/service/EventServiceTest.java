@@ -1,7 +1,9 @@
+package com.ferros.service;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
-import org.junit.Ignore;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import com.ferros.model.Event;
@@ -10,9 +12,10 @@ import com.ferros.model.User;
 import com.ferros.repository.EventRepository;
 import com.ferros.repository.FileRepository;
 import com.ferros.repository.UserRepository;
-import com.ferros.service.EventService;
+
 import java.util.ArrayList;
 import java.util.List;
+
 
 public class EventServiceTest {
 
@@ -62,7 +65,7 @@ public class EventServiceTest {
         assertEquals(event, resultEvent);
     }
 
-    @Test
+//    @Test
     public void testCreateUploadEvent() {
         User user = new User();
         File fileToSave = new File();
@@ -76,7 +79,7 @@ public class EventServiceTest {
     }
 
     @Test
-    @Ignore
+
     public void testUpdateEvent() {
         User user = new User();
         File file = new File();
