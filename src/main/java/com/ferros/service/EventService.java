@@ -9,13 +9,19 @@ import com.ferros.repository.UserRepository;
 import com.ferros.repository.hibernate.HibernateEventRepositoryImpl;
 import com.ferros.repository.hibernate.HibernateFileRepositoryImpl;
 import com.ferros.repository.hibernate.HibernateUserRepositoryImpl;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class EventService {
-    private final FileRepository fileRepository = new HibernateFileRepositoryImpl();
-    private final UserRepository userRepository = new HibernateUserRepositoryImpl();
-    private final EventRepository eventRepository = new HibernateEventRepositoryImpl();
+    private  FileRepository fileRepository = new HibernateFileRepositoryImpl();
+    private  UserRepository userRepository = new HibernateUserRepositoryImpl();
+    private  EventRepository eventRepository = new HibernateEventRepositoryImpl();
 
     public Event save(Event eventToCreate) {
 
@@ -38,5 +44,16 @@ public class EventService {
 
         eventRepository.save(newUploadEvent);
         return newUploadEvent;
+    }
+
+    public Event upateEvent(Integer eventId, Integer userId, Integer fileId) {
+        User user = userRepository.getById(userId);
+        File file = fileRepository.getById(fileId);
+        Event event = new Event(eventId, user, file);
+        return eventRepository.update(event);
+    }
+
+    public void deleteUser(Integer deletedEventId) {
+        eventRepository.deleteById(deletedEventId);
     }
 }

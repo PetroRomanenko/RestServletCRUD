@@ -1,5 +1,6 @@
 package com.ferros.model;
 
+import com.google.gson.annotations.Expose;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,8 +17,11 @@ public class File {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Expose
     private Integer id;
+    @Expose
     private String name;
     @Column(name ="file_path")
+    @Expose
     private String filePath;
 }

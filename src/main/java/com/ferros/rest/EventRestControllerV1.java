@@ -17,6 +17,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @WebServlet("/app/v1/events/*")
 public class EventRestControllerV1 extends HttpServlet {
@@ -53,14 +54,45 @@ public class EventRestControllerV1 extends HttpServlet {
         }
     }
 
-//    @Override
-//    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-//        resp.setCharacterEncoding(StandardCharsets.UTF_8.name());
-//        resp.setContentType("application/json");
-//
-//        File result = fileService.uploadFile(req);
-//        //GSON.toJson(result);
-//        String json = "";
-//        resp.getWriter().write(json);
-//    }
+    @Override
+    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        // Update Event change user using it userId
+        //{
+        //    "id": 3,
+        //    "user": {
+        //        "id": 2
+        //    },
+        //    "file": {
+        //        "id": 3
+        //        }
+        //}
+        String pathInfo = req.getPathInfo();
+        String eventIdString = pathInfo.substring(1);
+        Integer eventId = Integer.parseInt(eventIdString);
+
+        String requestBody = req.getReader().lines().collect(Collectors.joining());
+        Event updatedEventFromJson = gson.fromJson(requestBody, Event.class);
+
+        Integer userId = updatedEventFromJson.getUser().getId();
+        Integer fileId = updatedEventFromJson.getFile().getId();
+        Event upatedEvent = eventService.upateEvent(eventId,userId, fileId);
+
+        if (upatedEvent != null) {
+            String savedJsonString = gson.toJson(upatedEvent);
+            resp.getWriter().write(savedJsonString);
+        } else {
+            resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+        }
+    }
+
+    @Override
+    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        //Get id of event we want to delete
+        String pathInfo = req.getPathInfo();
+        String userIdString = pathInfo.substring(1);
+        Integer deletedEventId = Integer.parseInt(userIdString);
+
+        eventService.deleteUser(deletedEventId);
+        resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
+    }
 }

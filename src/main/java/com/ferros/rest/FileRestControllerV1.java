@@ -84,9 +84,6 @@ public class FileRestControllerV1 extends HttpServlet {
         Part filePart = req.getPart("file");
         String fileName = fileService.fileUploadService(filePart,userId).getName();
 
-
-
-
         resp.getWriter().println("File " + fileName + " has been uploaded successfully.");
 
     }
@@ -102,9 +99,9 @@ public class FileRestControllerV1 extends HttpServlet {
         String requestBody = req.getReader().lines().reduce("", (accumulator, actual) -> accumulator + actual);
 
         File updatedFile= gson.fromJson(requestBody, File.class);
-        updatedFile.setId(fileId);
 
-        File savedFile = fileService.upateFile(updatedFile);
+
+        File savedFile = fileService.upateFile(fileId,updatedFile.getName());
         if (savedFile != null) {
             String savedJsonString = gson.toJson(savedFile);
             resp.getWriter().write(savedJsonString);
@@ -115,6 +112,12 @@ public class FileRestControllerV1 extends HttpServlet {
 
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        fileService.deleteFile(req);
+        //Get id of user we want to delete
+        String pathInfo = req.getPathInfo();
+        String fileIdString = pathInfo.substring(1);
+        Integer deletedFileId = Integer.parseInt(fileIdString);
+
+        fileService.deleteFile(deletedFileId);
+        resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
     }
 }

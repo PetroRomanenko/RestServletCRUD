@@ -5,6 +5,7 @@ import com.ferros.model.Event;
 import com.ferros.model.User;
 import com.ferros.repository.FileRepository;
 import com.ferros.repository.hibernate.HibernateFileRepositoryImpl;
+import lombok.Data;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -14,30 +15,54 @@ import java.io.*;
 import java.nio.file.Files;
 import java.util.List;
 
+@Data
 public class FileService {
 
-    private final FileRepository fileRepository = new HibernateFileRepositoryImpl();
-    private final UserService userService = new UserService();
-    private final EventService eventService = new EventService();
-    private static final String USER = "user";
-
+    private  FileRepository fileRepository = new HibernateFileRepositoryImpl();
+    private  UserService userService = new UserService();
+    private  EventService eventService = new EventService();
     private final String UPLOAD_DIRECTORY = "src/main/resources/files";
-    private final String DEFAULT_FILENAME = "DefaultFile";
+
 
     public File getFile(Integer fileId) {
-//        Integer fileId = request.getIntHeader("file_id");
         return fileRepository.getById(fileId);
     }
 
-    public File upateFile(File file) {
-        return fileRepository.update(file);
+    public File upateFile(Integer fileId, String newFileName) {
+        File fileToUpdate = fileRepository.getById(fileId);
+
+        File upatedFile = changeFileName(fileToUpdate, newFileName);
+        upatedFile.setId(fileId);
+
+        return fileRepository.update(upatedFile);
     }
 
-    public void deleteFile(HttpServletRequest request) {
-        Integer fileId = request.getIntHeader("file_id");
-//        userService.deleteById(fileId);
+    private File changeFileName(File fileToUpdate, String newFileName) {
 
+
+        // Создание объекта File для старого файла
+        java.io.File oldFile = new java.io.File(fileToUpdate.getFilePath());
+
+        // Получение пути к директории файла
+        String parentDirectory = oldFile.getParent();
+
+        // Создание объекта File для нового файла
+        java.io.File newFile = new java.io.File(parentDirectory, newFileName);
+
+        // Попробуйте переименовать файл
+        if (oldFile.exists()) {
+            boolean success = oldFile.renameTo(newFile);
+            if (success) {
+                System.out.println("Файл успешно переименован");
+            } else {
+                System.out.println("Не удалось переименовать файл");
+            }
+        } else {
+            System.out.println("Старый файл не существует");
+        }
+        return new File(null, newFileName, newFile.getPath());
     }
+
 
     public File saveFileToDB(File file) {
         if (file != null) {
@@ -46,14 +71,13 @@ public class FileService {
     }
 
 
-
     public File fileUploadService(Part filePart, Integer userId) throws ServletException, IOException {
 
         String fileName = getSubmittedFileName(filePart);
         String filePath = UPLOAD_DIRECTORY + java.io.File.separator + fileName;
 
         java.io.File uploadDir = new java.io.File(UPLOAD_DIRECTORY);
-        if (!uploadDir.exists()){
+        if (!uploadDir.exists()) {
             uploadDir.mkdirs();
         }
         try (var fileContent = filePart.getInputStream()) {
@@ -69,7 +93,7 @@ public class FileService {
         fileToSave.setFilePath(filePath);
 
         //Save file to DB
-        File createdFile =saveFileToDB(fileToSave);
+        File createdFile = saveFileToDB(fileToSave);
         //Save Event to DB
         eventService.createUploadEvent(user, fileToSave);
 
@@ -128,5 +152,14 @@ public class FileService {
 
     public List<File> getAllFiles() {
         return fileRepository.getAll();
+    }
+
+
+    public void deleteFile(Integer deletedFileId) {
+        java.io.File fileToDelete = new java.io.File(fileRepository.getById(deletedFileId).getFilePath());
+
+        fileToDelete.delete();
+
+        fileRepository.deleteById(deletedFileId);
     }
 }

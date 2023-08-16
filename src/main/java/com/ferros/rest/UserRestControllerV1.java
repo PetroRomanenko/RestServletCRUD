@@ -76,6 +76,9 @@ public class UserRestControllerV1 extends HttpServlet {
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         //Get id and new data of user we want to change (UPDATE)
+        //{
+        //  "name": "New One1"
+        //}
         String pathInfo = req.getPathInfo();
         String userIdString = pathInfo.substring(1);
         Integer userId = Integer.parseInt(userIdString);
